@@ -13,7 +13,7 @@
 ## About Wraper
 
     you can use the wrapper like this:
-    ```C++
+```cpp
     
         //normal
         std::vector<std::vector<float>> calibratorData;
@@ -32,19 +32,18 @@
         //can write to engine and load From engine
         net.saveEngine("save_1.engine");
         trtNet net2("save_1.engine");
-    ```
+```
 
     when you need add new plugin ,just add the plugin code to pluginFactory
 
 ## Run Sample
 
-    //for classification
-    
-    ```Bash
+```bash
+    #for classification
     cd sample
     mkdir build
     cd build && cmake .. && make && make install
     cd ..
     ./install/runNet --caffemodel=${CAFFE_MODEL_NAME} --prototxt=${CAFFE_PROTOTXT} --input=./test.jpg
-    ```
+```
     
