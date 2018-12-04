@@ -13,7 +13,8 @@
 ## About Wraper
 
     you can use the wrapper like this:
-    '''C++
+    ```C++
+    
         //normal
         std::vector<std::vector<float>> calibratorData;
         trtNet net("vgg16.prototxt","vgg16.caffemodel",{"prob"},calibratorData);
@@ -31,17 +32,19 @@
         //can write to engine and load From engine
         net.saveEngine("save_1.engine");
         trtNet net2("save_1.engine");
-    '''
+    ```
 
     when you need add new plugin ,just add the plugin code to pluginFactory
 
 ## Run Sample
 
     //for classification
-    '''Bash
+    
+    ```Bash
     cd sample
     mkdir build
     cd build && cmake .. && make && make install
     cd ..
     ./install/runNet --caffemodel=${CAFFE_MODEL_NAME} --prototxt=${CAFFE_PROTOTXT} --input=./test.jpg
-    '''
+    ```
+    
