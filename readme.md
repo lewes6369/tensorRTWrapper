@@ -1,17 +1,12 @@
 # TRTWrapper
 
-## Desc
-
+### Desc
     a wrapper for tensorRT net (parser caffe)
-
-## Test Environments
-
+### Test Environments
     Ubuntu  16.04
     TensorRT 4.0.1.6
     CUDA 9.2
-
-## About Wraper
-
+### About Wraper
 you can use the wrapper like this:
 ```cpp
 //normal
@@ -33,9 +28,7 @@ net.saveEngine("save_1.engine");
 trtNet net2("save_1.engine");
 ```
 when you need add new plugin ,just add the plugin code to pluginFactory
-
-## Run Sample
-
+### Run Sample
 ```bash
 #for classification
 cd sample
@@ -44,4 +37,3 @@ cd build && cmake .. && make && make install
 cd ..
 ./install/runNet --caffemodel=${CAFFE_MODEL_NAME} --prototxt=${CAFFE_PROTOTXT} --input=./test.jpg
 ```
-    
