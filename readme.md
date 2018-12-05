@@ -21,7 +21,7 @@ trtNet net_int8("vgg16.prototxt","vgg16.caffemodel",{"prob"},calibratorData,RUN_
 net.doInference(input_data.get(), outputData.get());
 
 //can print time cost
-net->printTime();
+net.printTime();
 
 //can write to engine and load From engine
 net.saveEngine("save_1.engine");
