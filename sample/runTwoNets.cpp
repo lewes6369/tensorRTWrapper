@@ -2,7 +2,7 @@
 #include <sstream>
 #include <memory>
 #include <opencv2/opencv.hpp>
-#include "../src/TrtNet.h"
+#include "../code/include/TrtNet.h"
 #include "argsParser.h"
 #include "configs.h"
 
@@ -29,23 +29,24 @@ unique_ptr<float[]> prepareImage(const string& fileName)
     cv::resize(img, resized, cv::Size(h,w));
 
     cv::Mat img_float;
-    if (INPUT_CHANNEL == 3)
+    if (c_str == 3)
         resized.convertTo(img_float, CV_32FC3);
     else
         resized.convertTo(img_float, CV_32FC1);
 
     //HWC TO CHW
-    cv::Mat input_channels[INPUT_CHANNEL];
+    cv::Mat input_channels[c];
     cv::split(img_float, input_channels);
 
     float * data = new float[h*w*c];
+    auto result = data;
     int channelLength = h * w;
     for (int i = 0; i < c; ++i) {
         memcpy(data,input_channels[i].data,channelLength*sizeof(float));
         data += channelLength;
     }     
 
-    return std::unique_ptr<float[]>(data);
+    return std::unique_ptr<float[]>(result);
 }
 
 int main( int argc, char* argv[] )
@@ -75,7 +76,8 @@ int main( int argc, char* argv[] )
     //Change to another net also will crash
     trtNet net3("yolov3.prototxt","yolov3.caffemodel",{"prob"},calibratorData);
 
-    auto input_data = prepareImage(INPUT_IMAGE);
+    string inputImage = parser::getStringValue("input");
+    auto inputData = prepareImage(inputImage);
     int outputCount = net.getOutputSize()/sizeof(float);
     std::unique_ptr<float[]> outputData(new float[outputCount]);
 

@@ -38,7 +38,7 @@ namespace nvinfer1
       read(d, mOutputHeight);
       read(d, mThreadCount);
   
-      std::cout << "read:" <<mOutputWidth<< " " <<mOutputHeight<<std::endl;
+      std::cout << "read:" << a << " " << mOutputWidth<< " " <<mOutputHeight<<std::endl;
       assert(d == a + length);
   }
   
@@ -52,7 +52,7 @@ namespace nvinfer1
       write(d, mOutputHeight);
       write(d, mThreadCount);
   
-      std::cout << "write:" <<mOutputHeight<< " " <<mOutputWidth<<std::endl;
+      std::cout << "write:" << a << " " << mOutputHeight<< " " <<mOutputWidth<<std::endl;
       assert(d == a + getSerializationSize());
   }
   

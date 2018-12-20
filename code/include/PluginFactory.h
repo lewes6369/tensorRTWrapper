@@ -38,15 +38,13 @@ namespace Tn
                 if(isLeakyRelu(layerName))
                 {
                     assert(nbWeights == 0 && weights == nullptr);
-                    auto plugin = std::unique_ptr<INvPlugin, void(*)(INvPlugin*)>(createPReLUPlugin(NEG_SLOPE), nvPluginDeleter);
-                    mPluginLeakyRelu.push_back(move(plugin));
+                    mPluginLeakyRelu.emplace_back(std::unique_ptr<INvPlugin, void(*)(INvPlugin*)>(createPReLUPlugin(NEG_SLOPE), nvPluginDeleter));
                     return mPluginLeakyRelu.back().get();
                 }
                 else if (isUpsample(layerName))
                 {
                     assert(nbWeights == 0 && weights == nullptr);
-                    auto plugin = std::unique_ptr<UpsampleLayerPlugin>(new UpsampleLayerPlugin(UPSAMPLE_SCALE,CUDA_THREAD_NUM));
-                    mPluginUpsample.push_back(move(plugin));
+                    mPluginUpsample.emplace_back(std::unique_ptr<UpsampleLayerPlugin>(new UpsampleLayerPlugin(UPSAMPLE_SCALE,CUDA_THREAD_NUM)));
                     return mPluginUpsample.back().get();
                 }
                 else
@@ -62,14 +60,12 @@ namespace Tn
 
             if (isLeakyRelu(layerName))
             {
-                auto plugin = std::unique_ptr<INvPlugin, void (*)(INvPlugin*)>(createPReLUPlugin(serialData, serialLength), nvPluginDeleter);
-                mPluginLeakyRelu.push_back(move(plugin));
+                mPluginLeakyRelu.emplace_back(std::unique_ptr<INvPlugin, void (*)(INvPlugin*)>(createPReLUPlugin(serialData, serialLength), nvPluginDeleter));
                 return mPluginLeakyRelu.back().get();
             }
             else if (isUpsample(layerName))
             {
-                auto plugin = std::unique_ptr<UpsampleLayerPlugin>(new UpsampleLayerPlugin(serialData, serialLength));
-                mPluginUpsample.push_back(move(plugin));
+                mPluginUpsample.emplace_back(std::unique_ptr<UpsampleLayerPlugin>(new UpsampleLayerPlugin(serialData, serialLength)));
                 return mPluginUpsample.back().get();
             }
             else
@@ -94,17 +90,14 @@ namespace Tn
         // The application has to destroy the plugin when it knows it's safe to do so.
         void destroyPlugin()
         {
-            std::cout << "destroyPlugin";
             for (auto& item : mPluginLeakyRelu)
                 item.reset();
 
             for (auto& item : mPluginUpsample)
                 item.reset();
-
-            std::cout << "destroyPluginOK";
         }
 
-        void (*nvPluginDeleter)(INvPlugin*){[](INvPlugin* ptr) { ptr->destroy(); }};
+        void (*nvPluginDeleter)(INvPlugin*){[](INvPlugin* ptr) { if(ptr) ptr->destroy(); }};
 
         std::vector<std::unique_ptr<INvPlugin,void (*)(INvPlugin*)>> mPluginLeakyRelu{};
         std::vector<std::unique_ptr<UpsampleLayerPlugin>> mPluginUpsample{};

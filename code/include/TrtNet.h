@@ -23,16 +23,11 @@ namespace Tn
     {
         public:
             //Load from caffe model
-            trtNet(std::string prototxt,std::string caffeModel,std::vector<std::string>&& outputNodesName,
-                    std::vector<std::vector<float>>& calibratorData, RUN_MODE mode = RUN_MODE::FLOAT32);
-
-            trtNet(std::string prototxt,std::string caffeModel,std::vector<std::string>& outputNodesName,
-                    std::vector<std::vector<float>>& calibratorData, RUN_MODE mode = RUN_MODE::FLOAT32)
-                    :trtNet(prototxt,caffeModel,std::move(outputNodesName),calibratorData,mode){};
+            trtNet(const std::string& prototxt,const std::string& caffeModel,const std::vector<std::string>& outputNodesName,
+                    const std::vector<std::vector<float>>& calibratorData, RUN_MODE mode = RUN_MODE::FLOAT32);
         
-
             //Load from engine file
-            explicit trtNet(std::string engineFile);
+            explicit trtNet(const std::string& engineFile);
 
             ~trtNet()
             {
@@ -50,7 +45,6 @@ namespace Tn
                     mTrtContext->destroy();
                 if(!mTrtEngine)
                     mTrtEngine->destroy();
-
             };
 
             void saveEngine(std::string fileName)
@@ -89,7 +83,7 @@ namespace Tn
         private:
                 nvinfer1::ICudaEngine* loadModelAndCreateEngine(const char* deployFile, const char* modelFile,int maxBatchSize,
                                         nvcaffeparser1::ICaffeParser* parser, nvcaffeparser1::IPluginFactory* pluginFactory,
-                                        nvinfer1::IInt8Calibrator* calibrator, nvinfer1::IHostMemory*& trtModelStream,std::vector<std::string>& outputNodesName);
+                                        nvinfer1::IInt8Calibrator* calibrator, nvinfer1::IHostMemory*& trtModelStream,const std::vector<std::string>& outputNodesName);
 
                 void InitEngine();
 

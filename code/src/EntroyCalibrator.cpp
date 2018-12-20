@@ -7,8 +7,8 @@
 
 namespace nvinfer1
 {
-    Int8EntropyCalibrator::Int8EntropyCalibrator(int BatchSize,std::vector<std::vector<float>>& data,
-                                            std::string CalibDataName /*= ""*/,bool readCache /*= true*/)
+    Int8EntropyCalibrator::Int8EntropyCalibrator(int BatchSize,const std::vector<std::vector<float>>& data,
+                                            const std::string& CalibDataName /*= ""*/,bool readCache /*= true*/)
         : mCalibDataName(CalibDataName),mBatchSize(BatchSize),mReadCache(readCache)
     {     
         mDatas.reserve(data.size());
@@ -36,8 +36,7 @@ namespace nvinfer1
 
         float* ptr = mCurBatchData;
         size_t imgSize = mInputCount / mBatchSize;
-        auto iter = mDatas.begin();
-        std::advance(iter , mCurBatchIdx);
+        auto iter = mDatas.begin() + mCurBatchIdx;
 
         std::for_each(iter, iter + mBatchSize, [=,&ptr](std::vector<float>& val){
             assert(imgSize == val.size());

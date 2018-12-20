@@ -13,7 +13,7 @@ namespace nvinfer1
 class Int8EntropyCalibrator : public IInt8EntropyCalibrator
 {
 public:
-	Int8EntropyCalibrator(int BatchSize,std::vector<std::vector<float>>& data,std::string CalibDataName = "",bool readCache = true);
+	Int8EntropyCalibrator(int BatchSize,const std::vector<std::vector<float>>& data,const std::string& CalibDataName = "",bool readCache = true);
 
 	virtual ~Int8EntropyCalibrator();
 

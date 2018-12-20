@@ -3,12 +3,15 @@ project(trtNet)
 
 set(CMAKE_BUILD_TYPE Release)
 
+#include
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 #src
 set(PLUGIN_SOURCES
-  EntroyCalibrator.cpp
-  UpsampleLayer.cpp
-  UpsampleLayer.cu
-  TrtNet.cpp
+  src/EntroyCalibrator.cpp
+  src/UpsampleLayer.cpp
+  src/UpsampleLayer.cu
+  src/TrtNet.cpp
 )
 
 #

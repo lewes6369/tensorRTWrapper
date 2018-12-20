@@ -56,8 +56,8 @@ inline unsigned int getElementSize(nvinfer1::DataType t)
 
 namespace Tn
 {
-    trtNet::trtNet(std::string prototxt,std::string caffemodel,std::vector<std::string>&& outputNodesName,
-                        std::vector<std::vector<float>>& calibratorData,RUN_MODE mode /*= RUN_MODE::FLOAT32*/)
+    trtNet::trtNet(const std::string& prototxt,const std::string& caffemodel,const std::vector<std::string>& outputNodesName,
+                    const std::vector<std::vector<float>>& calibratorData,RUN_MODE mode /*= RUN_MODE::FLOAT32*/)
     :mTrtContext(nullptr),mTrtEngine(nullptr),mTrtRunTime(nullptr),mTrtRunMode(mode),mTrtInputCount(0),mTrtIterationTime(0)
     {
         std::cout << "init plugin proto: " << prototxt << " caffemodel: " << caffemodel << std::endl;
@@ -70,7 +70,7 @@ namespace Tn
         if (calibratorData.size() > 0 ){
             auto endPos= prototxt.find_last_of(".");
 	        auto beginPos= prototxt.find_last_of('/') + 1;
-            std::string calibratorName = prototxt.substr(beginPos ,endPos - beginPos);
+            std::string calibratorName = prototxt.substr(beginPos,endPos - beginPos);
             std::cout << "create calibrator,Named:" << calibratorName << std::endl;
             calibrator = new Int8EntropyCalibrator(maxBatchSize,calibratorData,calibratorName);
         }
@@ -96,7 +96,7 @@ namespace Tn
         InitEngine();
     }
 
-    trtNet::trtNet(std::string engineFile)
+    trtNet::trtNet(const std::string& engineFile)
     :mTrtContext(nullptr),mTrtEngine(nullptr),mTrtRunTime(nullptr),mTrtRunMode(RUN_MODE::FLOAT32),mTrtInputCount(0),mTrtIterationTime(0)
     {
         using namespace std;
@@ -154,7 +154,7 @@ namespace Tn
 
     nvinfer1::ICudaEngine* trtNet::loadModelAndCreateEngine(const char* deployFile, const char* modelFile,int maxBatchSize,
                                         ICaffeParser* parser, nvcaffeparser1::IPluginFactory* pluginFactory,
-                                        IInt8Calibrator* calibrator, IHostMemory*& trtModelStream,std::vector<std::string>& outputNodesName)
+                                        IInt8Calibrator* calibrator, IHostMemory*& trtModelStream,const std::vector<std::string>& outputNodesName)
     {
         // Create the builder
         IBuilder* builder = createInferBuilder(gLogger);
@@ -231,10 +231,9 @@ namespace Tn
 
         for (size_t bindingIdx = mTrtInputCount; bindingIdx < mTrtBindBufferSize.size(); ++bindingIdx)
         {
-            char * output = static_cast<char *>(outputData);
             auto size = mTrtBindBufferSize[bindingIdx];
-            CUDA_CHECK(cudaMemcpyAsync(output, mTrtCudaBuffer[bindingIdx], size, cudaMemcpyDeviceToHost, mTrtCudaStream));
-            output +=size;
+            CUDA_CHECK(cudaMemcpyAsync(outputData, mTrtCudaBuffer[bindingIdx], size, cudaMemcpyDeviceToHost, mTrtCudaStream));
+            outputData = (char *)outputData + size;
         }
 
         mTrtIterationTime ++ ;
