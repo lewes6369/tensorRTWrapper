@@ -31,7 +31,7 @@ namespace nvinfer1
 
     bool Int8EntropyCalibrator::getBatch(void* bindings[], const char* names[], int nbBindings)
     {
-        if (mCurBatchIdx + mBatchSize >= int(mDatas.size())) 
+        if (mCurBatchIdx + mBatchSize > int(mDatas.size())) 
              return false;
 
         float* ptr = mCurBatchData;
