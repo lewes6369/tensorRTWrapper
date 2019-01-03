@@ -11,6 +11,7 @@ set(PLUGIN_SOURCES
   src/EntroyCalibrator.cpp
   src/UpsampleLayer.cpp
   src/UpsampleLayer.cu
+  src/YoloLayer.cu
   src/TrtNet.cpp
 )
 

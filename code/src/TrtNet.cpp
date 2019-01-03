@@ -86,7 +86,7 @@ namespace Tn
         tmpEngine->destroy();
         pluginFactorySerialize.destroyPlugin();
 
-        mTrtRunTime = createInferRuntime(gLogger);
+        mTrtRunTime = createInferRuntime(gLogger);     
         assert(mTrtRunTime != nullptr);
         mTrtEngine= mTrtRunTime->deserializeCudaEngine(trtModelStream->data(), trtModelStream->size(), &mTrtPluginFactory);
         assert(mTrtEngine != nullptr);
@@ -174,6 +174,9 @@ namespace Tn
         {
             auto output = blobNameToTensor->find(name.c_str());
             assert(output!=nullptr);
+            if (output == nullptr)
+                std::cout << "can not find output named " << name << std::endl;
+
             network->markOutput(*output);
         }
 

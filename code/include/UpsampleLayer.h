@@ -15,7 +15,7 @@ namespace nvinfer1
     class UpsampleLayerPlugin: public IPluginExt
     {
     public:
-        explicit UpsampleLayerPlugin(const float scale, const float cudaThread = 512);
+        explicit UpsampleLayerPlugin(const float scale, const int cudaThread = 512);
         // create the plugin at runtime from a byte stream
         UpsampleLayerPlugin(const void* data, size_t length);
 
@@ -57,8 +57,6 @@ namespace nvinfer1
         void forwardGpu(const Dtype* input,Dtype * outputint ,int N,int C,int H ,int W);
 
     private:
-        size_t type2size(DataType type) { return type == DataType::kFLOAT ? sizeof(float) : sizeof(__half); }
-
         nvinfer1::Dims mCHW;
         DataType mDataType{DataType::kFLOAT};
         float mScale;

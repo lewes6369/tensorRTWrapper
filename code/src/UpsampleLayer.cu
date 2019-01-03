@@ -35,6 +35,18 @@ namespace nvinfer1
     upscale<<<(numElem + mThreadCount - 1) / mThreadCount, mThreadCount>>>(input,output, numElem, mScale, C, H, W);
   }
   
+  size_t type2size(DataType dataType) { 
+    size_t _size = 0;
+    switch (dataType)
+    {
+        case DataType::kFLOAT: _size = sizeof(float);break;
+        case DataType::kHALF: _size = sizeof(__half);break;
+        case DataType::kINT8: _size = sizeof(u_int8_t);break;
+        default:std::cerr << "error data type" << std::endl;
+    }
+    return _size;
+  }
+
   int UpsampleLayerPlugin::enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream)
   {
       assert(batchSize == 1);
@@ -48,9 +60,10 @@ namespace nvinfer1
       // Handle no-op resizes efficiently.
       if (out_height == in_height && out_width == in_width) {
           CUDA_CHECK(cudaMemcpyAsync(outputs[0], inputs[0], totalElems * type2size(mDataType), cudaMemcpyDeviceToDevice, stream));
+          CUDA_CHECK(cudaStreamSynchronize(stream));
           return 0;
       }
-      CUDA_CHECK(cudaStreamSynchronize(stream));
+      //CUDA_CHECK(cudaStreamSynchronize(stream));
       
        switch (mDataType)
        {
