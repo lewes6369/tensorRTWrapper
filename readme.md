@@ -4,7 +4,7 @@
     a wrapper for tensorRT net (parser caffe)
 ### Test Environments
     Ubuntu  16.04
-    TensorRT 4.0.1.6
+    TensorRT 5.0.2.6/4.0.1.6
     CUDA 9.2
 ### About Wraper
 you can use the wrapper like this:
