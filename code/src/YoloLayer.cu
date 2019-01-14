@@ -179,26 +179,23 @@ namespace nvinfer1
             int beginIdx = (LOCATIONS + 1 + classes)* stride *k + idx;
             int objIndex = beginIdx + LOCATIONS*stride;
             
-            //check obj
+            //check objectness
             float objProb = Logist(input[objIndex]);   
             if(objProb <= IGNORE_THRESH)
                 continue;
 
-            //add first result count
-            int resCount = (int)atomicAdd(output,1);
-            char* data = (char * )output + sizeof(float) + resCount*sizeof(Detection);
-
             int row = idx / yoloWidth;
             int cols = idx % yoloWidth;
 
-            Detection* det =  (Detection*)(data);
-            //det->objectness = objProb;
+            Detection det_tmp;
 
             //Location
-            det->bbox[0] = (cols + Logist(input[beginIdx]))/ yoloWidth;
-            det->bbox[1] = (row + Logist(input[beginIdx+stride]))/ yoloHeight;
-            det->bbox[2] = exp(input[beginIdx+2*stride]) * anchors[2*k];
-            det->bbox[3] = exp(input[beginIdx+3*stride]) * anchors[2*k + 1];
+            det_tmp.bbox[0] = (cols + Logist(input[beginIdx]))/ yoloWidth;
+            det_tmp.bbox[1] = (row + Logist(input[beginIdx+stride]))/ yoloHeight;
+            det_tmp.bbox[2] = exp(input[beginIdx+2*stride]) * anchors[2*k];
+            det_tmp.bbox[3] = exp(input[beginIdx+3*stride]) * anchors[2*k + 1];
+            det_tmp.classId = -1;
+            det_tmp.prob = 0;
             
             //classes
             float max = IGNORE_THRESH;
@@ -206,9 +203,21 @@ namespace nvinfer1
                 float cProb =  Logist(input[beginIdx + (5 + c) * stride]) * objProb;
                 if(cProb > max){
                     max = cProb;
-                    det->classId = c;
-                    det->prob = max;
+                    det_tmp.classId = c;
+                    det_tmp.prob = max;
                 }
+            }
+
+            if(det_tmp.classId >= 0) {
+                int resCount = (int)atomicAdd(output,1);
+                char* data = (char * )output + sizeof(float) + resCount*sizeof(Detection);
+                Detection* det =  (Detection*)(data);
+                det->bbox[0] = det_tmp.bbox[0];
+                det->bbox[1] = det_tmp.bbox[1];
+                det->bbox[2] = det_tmp.bbox[2];
+                det->bbox[3] = det_tmp.bbox[3];
+                det->classId = det_tmp.classId;
+                det->prob =  det_tmp.prob;
             }
         }
     }

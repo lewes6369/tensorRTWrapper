@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <fstream>
+#include <numeric>
 #include "NvInferPlugin.h"
 #include "NvCaffeParser.h"
 #include "PluginFactory.h"
