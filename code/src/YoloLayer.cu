@@ -118,31 +118,33 @@ namespace nvinfer1
                         if(objProb <= IGNORE_THRESH)
                             continue;
 
-                        Detection det;
-                        //det.objectness = objProb;
-                        int row = j / yolo.width;
-                        int cols = j % yolo.width;
-
-                        //Location
-                        det.bbox[0] = (cols + Logist(inputData[beginIdx]))/ yolo.width;
-                        det.bbox[1] = (row + Logist(inputData[beginIdx+stride]))/ yolo.height;
-                        det.bbox[2] = exp(inputData[beginIdx+2*stride]) * yolo.anchors[2*k];
-                        det.bbox[3] = exp(inputData[beginIdx+3*stride]) * yolo.anchors[2*k + 1];
-
                         //classes
-                        std::vector<float> classProb;
-                        classProb.resize(mClassCount);
-                        for (int c = 0;c<mClassCount;++c)
-                        {
-                            float cProb =  Logist(inputData[beginIdx + (5+c)*stride ]) * objProb;
-                            classProb[c] = (cProb > IGNORE_THRESH) ? cProb : 0;
+                        int classId = -1;
+                        float maxProb = IGNORE_THRESH;
+                        for (int c = 0;c< mClassCount;++c){
+                            float cProb =  Logist(inputData[beginIdx + (5 + c) * stride]) * objProb;
+                            if(cProb > maxProb){
+                                maxProb = cProb;
+                                classId = c;
+                            }
                         }
+            
+                        if(classId >= 0) {
+                            Detection det;
+                            int row = j / yolo.width;
+                            int cols = j % yolo.width;
+    
+                            //Location
+                            det.bbox[0] = (cols + Logist(inputData[beginIdx]))/ yolo.width;
+                            det.bbox[1] = (row + Logist(inputData[beginIdx+stride]))/ yolo.height;
+                            det.bbox[2] = exp(inputData[beginIdx+2*stride]) * yolo.anchors[2*k];
+                            det.bbox[3] = exp(inputData[beginIdx+3*stride]) * yolo.anchors[2*k + 1];
+                            det.classId = classId;
+                            det.prob = maxProb;
+                            //det.objectness = objProb;
 
-                        auto maxEle = std::max_element(&classProb[0], &classProb[mClassCount] + 1);
-                        det.classId = std::distance(&classProb[0],maxEle);
-                        det.prob = *maxEle;
-
-                        result.emplace_back(det);
+                            result.emplace_back(det);
+                        }
                     }
                 }
 
@@ -159,7 +161,6 @@ namespace nvinfer1
             //copy result
             memcpy(data,result.data(),result.size()*sizeof(Detection));
 
-            std::cout << "copy result" << std::endl;
             //(count + det result)
             CUDA_CHECK(cudaMemcpyAsync(outputs, mOutputBuffer, sizeof(float) + result.size()*sizeof(Detection), cudaMemcpyHostToDevice, stream));
     };
@@ -186,38 +187,30 @@ namespace nvinfer1
 
             int row = idx / yoloWidth;
             int cols = idx % yoloWidth;
-
-            Detection det_tmp;
-
-            //Location
-            det_tmp.bbox[0] = (cols + Logist(input[beginIdx]))/ yoloWidth;
-            det_tmp.bbox[1] = (row + Logist(input[beginIdx+stride]))/ yoloHeight;
-            det_tmp.bbox[2] = exp(input[beginIdx+2*stride]) * anchors[2*k];
-            det_tmp.bbox[3] = exp(input[beginIdx+3*stride]) * anchors[2*k + 1];
-            det_tmp.classId = -1;
-            det_tmp.prob = 0;
             
             //classes
-            float max = IGNORE_THRESH;
+            int classId = -1;
+            float maxProb = IGNORE_THRESH;
             for (int c = 0;c<classes;++c){
                 float cProb =  Logist(input[beginIdx + (5 + c) * stride]) * objProb;
-                if(cProb > max){
-                    max = cProb;
-                    det_tmp.classId = c;
-                    det_tmp.prob = max;
+                if(cProb > maxProb){
+                    maxProb = cProb;
+                    classId = c;
                 }
             }
 
-            if(det_tmp.classId >= 0) {
+            if(classId >= 0) {
                 int resCount = (int)atomicAdd(output,1);
                 char* data = (char * )output + sizeof(float) + resCount*sizeof(Detection);
                 Detection* det =  (Detection*)(data);
-                det->bbox[0] = det_tmp.bbox[0];
-                det->bbox[1] = det_tmp.bbox[1];
-                det->bbox[2] = det_tmp.bbox[2];
-                det->bbox[3] = det_tmp.bbox[3];
-                det->classId = det_tmp.classId;
-                det->prob =  det_tmp.prob;
+
+                //Location
+                det->bbox[0] = (cols + Logist(input[beginIdx]))/ yoloWidth;
+                det->bbox[1] = (row + Logist(input[beginIdx+stride]))/ yoloHeight;
+                det->bbox[2] = exp(input[beginIdx+2*stride]) * anchors[2*k];
+                det->bbox[3] = exp(input[beginIdx+3*stride]) * anchors[2*k + 1];
+                det->classId = classId;
+                det->prob = maxProb;
             }
         }
     }
@@ -230,7 +223,7 @@ namespace nvinfer1
 
         //first detect count init 0
         CUDA_CHECK(cudaMemset(output, 0, sizeof(float)));
-        for (int i = 0;i< mYoloKernel.size();++i)
+        for (unsigned int i = 0;i< mYoloKernel.size();++i)
         {
             const auto& yolo = mYoloKernel[i];
             numElem = yolo.width*yolo.height;
