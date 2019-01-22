@@ -29,7 +29,7 @@ unique_ptr<float[]> prepareImage(const string& fileName)
     cv::resize(img, resized, cv::Size(h,w));
 
     cv::Mat img_float;
-    if (c_str == 3)
+    if (c == 3)
         resized.convertTo(img_float, CV_32FC3);
     else
         resized.convertTo(img_float, CV_32FC1);
@@ -82,7 +82,7 @@ int main( int argc, char* argv[] )
     std::unique_ptr<float[]> outputData(new float[outputCount]);
 
     for (int i = 0 ;i<ITER_TIMES;++i)
-        net.doInference(input_data.get(), outputData.get() );
+        net.doInference(inputData.get(), outputData.get() );
 
     net.printTime();
 
