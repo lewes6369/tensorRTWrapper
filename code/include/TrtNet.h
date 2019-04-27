@@ -25,7 +25,7 @@ namespace Tn
         public:
             //Load from caffe model
             trtNet(const std::string& prototxt,const std::string& caffeModel,const std::vector<std::string>& outputNodesName,
-                    const std::vector<std::vector<float>>& calibratorData, RUN_MODE mode = RUN_MODE::FLOAT32);
+                    const std::vector<std::vector<float>>& calibratorData, RUN_MODE mode = RUN_MODE::FLOAT32 , int maxBatchSize = 1);
         
             //Load from engine file
             explicit trtNet(const std::string& engineFile);
@@ -66,7 +66,7 @@ namespace Tn
                 }
             };
 
-            void doInference(const void* inputData, void* outputData);
+            void doInference(const void* inputData, void* outputData,int batchSize = 1);
             
             inline size_t getInputSize() {
                 return std::accumulate(mTrtBindBufferSize.begin(), mTrtBindBufferSize.begin() + mTrtInputCount,0);
@@ -80,6 +80,8 @@ namespace Tn
             {
                 mTrtProfiler.printLayerTimes(mTrtIterationTime);
             }
+            
+            inline int getBatchSize() {return mTrtBatchSize;};
 
         private:
                 nvinfer1::ICudaEngine* loadModelAndCreateEngine(const char* deployFile, const char* modelFile,int maxBatchSize,
@@ -100,6 +102,7 @@ namespace Tn
                 std::vector<int64_t> mTrtBindBufferSize;
                 int mTrtInputCount;
                 int mTrtIterationTime;
+                int mTrtBatchSize;
     };
 }
 

@@ -15,7 +15,7 @@ namespace Yolo
     struct YoloKernel;
 
     static constexpr int LOCATIONS = 4;
-    struct Detection{
+    struct alignas(float) Detection{
         //x y w h
         float bbox[LOCATIONS];
         //float objectness;
@@ -60,9 +60,9 @@ namespace nvinfer1
 
         virtual void serialize(void* buffer) override;
 
-        void forwardGpu(const float *const * inputs,float * output, cudaStream_t stream);
+        void forwardGpu(const float *const * inputs,float * output, cudaStream_t stream,int batchSize = 1);
 
-        void forwardCpu(const float *const * inputs,float * output, cudaStream_t stream);
+        void forwardCpu(const float *const * inputs,float * output, cudaStream_t stream,int batchSize = 1);
 
     private:
         int mClassCount;

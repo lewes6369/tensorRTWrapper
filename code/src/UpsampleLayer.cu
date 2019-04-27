@@ -49,7 +49,6 @@ namespace nvinfer1
 
   int UpsampleLayerPlugin::enqueue(int batchSize, const void*const * inputs, void** outputs, void* workspace, cudaStream_t stream)
   {
-      assert(batchSize == 1);
       const int channels = mCHW.d[0];
       const int64_t in_height = mCHW.d[1];
       const int64_t in_width = mCHW.d[2];

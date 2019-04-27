@@ -57,13 +57,12 @@ inline unsigned int getElementSize(nvinfer1::DataType t)
 namespace Tn
 {
     trtNet::trtNet(const std::string& prototxt,const std::string& caffemodel,const std::vector<std::string>& outputNodesName,
-                    const std::vector<std::vector<float>>& calibratorData,RUN_MODE mode /*= RUN_MODE::FLOAT32*/)
-    :mTrtContext(nullptr),mTrtEngine(nullptr),mTrtRunTime(nullptr),mTrtRunMode(mode),mTrtInputCount(0),mTrtIterationTime(0)
+                    const std::vector<std::vector<float>>& calibratorData,RUN_MODE mode /*= RUN_MODE::FLOAT32*/,int maxBatchSize /*= 1*/)
+    :mTrtContext(nullptr),mTrtEngine(nullptr),mTrtRunTime(nullptr),mTrtRunMode(mode),mTrtInputCount(0),mTrtIterationTime(0),mTrtBatchSize(maxBatchSize)
     {
         std::cout << "init plugin proto: " << prototxt << " caffemodel: " << caffemodel << std::endl;
         auto parser = createCaffeParser();
 
-        const int maxBatchSize = 1;
         IHostMemory* trtModelStream{nullptr};
 
         Int8EntropyCalibrator * calibrator = nullptr;
@@ -116,7 +115,7 @@ namespace Tn
 
         file.close();
 
-        std::cout << "*** deserializing" << std::endl;
+        std::cout << "deserializing" << std::endl;
         mTrtRunTime = createInferRuntime(gLogger);
         assert(mTrtRunTime != nullptr);
         mTrtEngine= mTrtRunTime->deserializeCudaEngine(data.get(), length, &mTrtPluginFactory);
@@ -127,7 +126,7 @@ namespace Tn
 
     void trtNet::InitEngine()
     {
-        const int maxBatchSize = 1;
+        mTrtBatchSize = mTrtEngine->getMaxBatchSize();
         mTrtContext = mTrtEngine->createExecutionContext();
         assert(mTrtContext != nullptr);
         mTrtContext->setProfiler(&mTrtProfiler);
@@ -141,7 +140,7 @@ namespace Tn
         {
             Dims dims = mTrtEngine->getBindingDimensions(i);
             DataType dtype = mTrtEngine->getBindingDataType(i);
-            int64_t totalSize = volume(dims) * maxBatchSize * getElementSize(dtype);
+            int64_t totalSize = volume(dims) * mTrtBatchSize * getElementSize(dtype);
             mTrtBindBufferSize[i] = totalSize;
             mTrtCudaBuffer[i] = safeCudaMalloc(totalSize);
             if(mTrtEngine->bindingIsInput(i))
@@ -217,10 +216,11 @@ namespace Tn
         return engine;
     }
 
-    void trtNet::doInference(const void* inputData, void* outputData)
+    void trtNet::doInference(const void* inputData, void* outputData ,int batchSize /*= 1*/)
     {
-        static const int batchSize = 1;
+        //static const int batchSize = 1;
         assert(mTrtInputCount == 1);
+        assert(batchSize <= mTrtBatchSize);
 
         // DMA the input to the GPU,  execute the batch asynchronously, and DMA it back:
         int inputIndex = 0;
@@ -229,7 +229,6 @@ namespace Tn
         mTrtContext->execute(batchSize, &mTrtCudaBuffer[inputIndex]);
         auto t_end = std::chrono::high_resolution_clock::now();
         float total = std::chrono::duration<float, std::milli>(t_end - t_start).count();
-
         std::cout << "Time taken for inference is " << total << " ms." << std::endl;
 
         for (size_t bindingIdx = mTrtInputCount; bindingIdx < mTrtBindBufferSize.size(); ++bindingIdx)
@@ -238,6 +237,8 @@ namespace Tn
             CUDA_CHECK(cudaMemcpyAsync(outputData, mTrtCudaBuffer[bindingIdx], size, cudaMemcpyDeviceToHost, mTrtCudaStream));
             outputData = (char *)outputData + size;
         }
+
+        //cudaStreamSynchronize(mTrtCudaStream);
 
         mTrtIterationTime ++ ;
     }
