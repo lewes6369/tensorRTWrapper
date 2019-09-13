@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 
 using namespace std;
 
@@ -146,12 +147,12 @@ namespace Tn
             }
 
             //recall:         
-            recall[i] = (abs(TP + FN) < 1e-5) ? 1 : TP / (TP + FN);
+            recall[i] = (std::fabs(TP + FN) < 1e-5) ? 1 : TP / (TP + FN);
             //precision
-            precision[i] = TP / total;
+            precision[i] = TP / total;//total is TP+FP
 
             //compute AP:
-            sort(checkPRBoxs.begin(),checkPRBoxs.end(),[](CheckPair& left,CheckPair& right){
+            sort(checkPRBoxs.begin(),checkPRBoxs.end(),[](const CheckPair& left,const CheckPair& right){
                 return left.first.score > right.first.score;
                 }
             );
@@ -162,7 +163,7 @@ namespace Tn
             for (const auto& item : checkPRBoxs)
             {
                 item.second ? ++PR_TP : ++PR_FP;
-                PRValues.emplace_back( make_pair(PR_TP/ float(PR_TP+PR_FP) , PR_TP / float(total)) );
+                PRValues.emplace_back( make_pair(PR_TP/ float(PR_TP+PR_FP) , PR_TP / float(TP + FN)) );
             }
             
             float sum = PRValues[0].first * PRValues[0].second;
